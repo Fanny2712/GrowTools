@@ -592,9 +592,9 @@ function item_decoder(file, using_editor) {
                 title: "Your items.dat version is " + version + ", and This decoder doesnt support that version!"
             })
         }
-        data_json.version = version
-        data_json.item_count = item_count
-        data_json.items = []
+        //data_json.version = version
+        data_json.m_item_count = item_count
+        data_json.m_items = []
 
         for (let a = 0; a < item_count; a++) {
             var item_id = read_buffer_number(arrayBuffer, mem_pos, 4);
@@ -780,7 +780,7 @@ function item_decoder(file, using_editor) {
 data_json.items[a].m_seed_overlay = seed_overlay;
 data_json.items[a].m_seed_overlay_color = argbToInt(seed_overlay_color_a, seed_overlay_color_r, seed_overlay_color_g, seed_overlay_color_b);
 
-            data_json.items[a].spread_type = spread_type
+            data_json.items[a].m_spread_type = spread_type
 
             data_json.items[a].m_texture = texture
             data_json.items[a].m_texture_x = texture_x
