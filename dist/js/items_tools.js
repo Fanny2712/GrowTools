@@ -615,6 +615,9 @@ function item_decoder(file, using_editor) {
             var texture = read_buffer_string(arrayBuffer, mem_pos, len);
             mem_pos += len;
 
+            // Remove the .rttex extension
+            texture = texture.replace('.rttex', '');
+
             var texture_hash = read_buffer_number(arrayBuffer, mem_pos, 4);
             mem_pos += 4;
 
@@ -777,8 +780,8 @@ function item_decoder(file, using_editor) {
             data_json.items[a].m_seed_base = seed_base
 
             data_json.items[a].m_seed_color = argbToInt(seed_color_a, seed_color_r, seed_color_g, seed_color_b);
-data_json.items[a].m_seed_overlay = seed_overlay;
-data_json.items[a].m_seed_overlay_color = argbToInt(seed_overlay_color_a, seed_overlay_color_r, seed_overlay_color_g, seed_overlay_color_b);
+            data_json.items[a].m_seed_overlay = seed_overlay;
+            data_json.items[a].m_seed_overlay_color = argbToInt(seed_overlay_color_a, seed_overlay_color_r, seed_overlay_color_g, seed_overlay_color_b);
 
             data_json.items[a].m_spread_type = spread_type
 
