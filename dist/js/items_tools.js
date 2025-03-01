@@ -157,6 +157,11 @@ document.getElementById('decode_items_dat_editor').addEventListener('click', fun
     input.click();
 });
 
+function argbToInt(a, r, g, b) {
+    return (a << 24) | (r << 16) | (g << 8) | b;
+}
+
+
 document.getElementById('encode_items_dat').addEventListener('click', function () {
     var input = document.createElement('input');
     input.type = 'file';
@@ -767,31 +772,21 @@ function item_decoder(file, using_editor) {
             if (item_id != a) console.log(`Unordered Items at ${a}`)
 
             data_json.items[a] = {}
-            data_json.items[a].item_id = item_id
-            data_json.items[a].name = name
-            data_json.items[a].seed_base = seed_base
+            data_json.items[a].m_id = item_id
+            data_json.items[a].m_name = name
+            data_json.items[a].m_seed_base = seed_base
 
-            data_json.items[a].seed_color = {}
-            data_json.items[a].seed_color.a = seed_color_a
-            data_json.items[a].seed_color.r = seed_color_r
-            data_json.items[a].seed_color.g = seed_color_g
-            data_json.items[a].seed_color.b = seed_color_b
-
-            data_json.items[a].seed_overlay = seed_overlay
-
-            data_json.items[a].seed_overlay_color = {}
-            data_json.items[a].seed_overlay_color.a = seed_overlay_color_a
-            data_json.items[a].seed_overlay_color.r = seed_overlay_color_r
-            data_json.items[a].seed_overlay_color.g = seed_overlay_color_g
-            data_json.items[a].seed_overlay_color.b = seed_overlay_color_b
+            data_json.items[a].m_seed_color = argbToInt(seed_color_a, seed_color_r, seed_color_g, seed_color_b);
+data_json.items[a].m_seed_overlay = seed_overlay;
+data_json.items[a].m_seed_overlay_color = argbToInt(seed_overlay_color_a, seed_overlay_color_r, seed_overlay_color_g, seed_overlay_color_b);
 
             data_json.items[a].spread_type = spread_type
 
-            data_json.items[a].texture = texture
-            data_json.items[a].texture_x = texture_x
-            data_json.items[a].texture_y = texture_y
-            data_json.items[a].tree_base = tree_base
-            data_json.items[a].tree_leaves = tree_leaves
+            data_json.items[a].m_texture = texture
+            data_json.items[a].m_texture_x = texture_x
+            data_json.items[a].m_texture_y = texture_y
+            data_json.items[a].m_tree_base = tree_base
+            data_json.items[a].m_tree_leaves = tree_leaves
 
         }
         if (using_editor) {
