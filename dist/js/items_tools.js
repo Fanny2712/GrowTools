@@ -592,9 +592,9 @@ function item_decoder(file, using_editor) {
                 title: "Your items.dat version is " + version + ", and This decoder doesnt support that version!"
             })
         }
-        data_json.m_version = version
-        data_json.m_item_count = item_count
-        data_json.m_items = []
+        data_json.version = version
+        data_json.item_count = item_count
+        data_json.items = []
 
         for (let a = 0; a < item_count; a++) {
             var item_id = read_buffer_number(arrayBuffer, mem_pos, 4);
