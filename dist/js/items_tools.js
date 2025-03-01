@@ -595,6 +595,11 @@ function item_decoder(file, using_editor) {
             var item_id = read_buffer_number(arrayBuffer, mem_pos, 4);
             mem_pos += 4;
 
+            var editable_type = arrayBuffer[mem_pos++];
+            var item_category = arrayBuffer[mem_pos++];
+            var action_type = arrayBuffer[mem_pos++];
+            var hit_sound_type = arrayBuffer[mem_pos++];
+
             var len = read_buffer_number(arrayBuffer, mem_pos, 2)
             mem_pos += 2;
             var name = read_buffer_string(arrayBuffer, mem_pos, len, true, Number(item_id));
@@ -605,9 +610,64 @@ function item_decoder(file, using_editor) {
             var texture = read_buffer_string(arrayBuffer, mem_pos, len);
             mem_pos += len;
 
+            var texture_hash = read_buffer_number(arrayBuffer, mem_pos, 4);
+            mem_pos += 4;
+
+            var item_kind = arrayBuffer[mem_pos++];
+
+            var val1 = read_buffer_number(arrayBuffer, mem_pos, 4);
+            mem_pos += 4;
+
             var texture_x = arrayBuffer[mem_pos++];
             var texture_y = arrayBuffer[mem_pos++];
             var spread_type = arrayBuffer[mem_pos++];
+            var is_stripey_wallpaper = arrayBuffer[mem_pos++];
+            var collision_type = arrayBuffer[mem_pos++];
+            var break_hits = arrayBuffer[mem_pos++];
+
+            if ((break_hits % 6) !== 0) break_hits = break_hits + "r"
+            else break_hits = break_hits / 6
+
+            var drop_chance = read_buffer_number(arrayBuffer, mem_pos, 4);
+            mem_pos += 4;
+
+            var clothing_type = arrayBuffer[mem_pos++];
+
+            var rarity = read_buffer_number(arrayBuffer, mem_pos, 2);
+            mem_pos += 2;
+
+            var max_amount = arrayBuffer[mem_pos++];
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
+            mem_pos += 2;
+            var extra_file = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            var extra_file_hash = read_buffer_number(arrayBuffer, mem_pos, 4);
+            mem_pos += 4;
+
+            var audio_volume = read_buffer_number(arrayBuffer, mem_pos, 4);
+            mem_pos += 4;
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
+            mem_pos += 2;
+            var pet_name = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
+            mem_pos += 2;
+            var pet_prefix = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
+            mem_pos += 2;
+            var pet_suffix = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2);
+            mem_pos += 2;
+            var pet_ability = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
 
             var seed_base = arrayBuffer[mem_pos++];
             var seed_overlay = arrayBuffer[mem_pos++];
@@ -624,6 +684,14 @@ function item_decoder(file, using_editor) {
             var seed_overlay_color_b = arrayBuffer[mem_pos++];
 
             mem_pos += 4; // skipping ingredients
+
+            var grow_time = read_buffer_number(arrayBuffer, mem_pos, 4);
+            mem_pos += 4;
+
+            var val2 = read_buffer_number(arrayBuffer, mem_pos, 2);
+            mem_pos += 2;
+            var is_rayman = read_buffer_number(arrayBuffer, mem_pos, 2);
+            mem_pos += 2;
 
             len = read_buffer_number(arrayBuffer, mem_pos, 2)
             mem_pos += 2;
@@ -643,15 +711,89 @@ function item_decoder(file, using_editor) {
             var data_position_80 = hex(arrayBuffer.slice(mem_pos, mem_pos + 80), document.getElementById("using_txt_mode").checked).toUpperCase()
             mem_pos += 80;
 
+            if (version >= 11) {
+                len = read_buffer_number(arrayBuffer, mem_pos, 2)
+                mem_pos += 2;
+                var punch_options = read_buffer_string(arrayBuffer, mem_pos, len);
+                mem_pos += len;
+            }
+
+            if (version >= 12) {
+                var data_version_12 = hex(arrayBuffer.slice(mem_pos, mem_pos + 13), document.getElementById("using_txt_mode").checked).toUpperCase()
+                mem_pos += 13;
+            }
+
+            if (version >= 13) {
+                var int_version_13 = read_buffer_number(arrayBuffer, mem_pos, 4)
+                mem_pos += 4;
+            }
+
+            if (version >= 14) {
+                var int_version_14 = read_buffer_number(arrayBuffer, mem_pos, 4)
+                mem_pos += 4;
+            }
+
+            if (version >= 15) {
+                var data_version_15 = hex(arrayBuffer.slice(mem_pos, mem_pos + 25), document.getElementById("using_txt_mode").checked).toUpperCase()
+                mem_pos += 25;
+
+                len = read_buffer_number(arrayBuffer, mem_pos, 2);
+                mem_pos += 2;
+                var str_version_15 = read_buffer_string(arrayBuffer, mem_pos, len);
+                mem_pos += len
+            }
+            if (version >= 16) {
+                len = read_buffer_number(arrayBuffer, mem_pos, 2)
+                mem_pos += 2;
+                var str_version_16 = read_buffer_string(arrayBuffer, mem_pos, len);
+                mem_pos += len
+            }
+
+            if (version >= 17) {
+                var int_version_17 = read_buffer_number(arrayBuffer, mem_pos, 4)
+                mem_pos += 4;
+            }
+
+            if (version >= 18) {
+                var int_version_18 = read_buffer_number(arrayBuffer, mem_pos, 4)
+                mem_pos += 4;
+            }
+
+            if (version >= 19) {
+                var int_version_19 = read_buffer_number(arrayBuffer, mem_pos, 9)
+                mem_pos += 9;
+            }
+
             if (item_id != a) console.log(`Unordered Items at ${a}`)
 
             data_json.items[a] = {}
             data_json.items[a].item_id = item_id
+            data_json.items[a].editable_type = editable_type
+            data_json.items[a].item_category = item_category
+            data_json.items[a].action_type = action_type
+            data_json.items[a].hit_sound_type = hit_sound_type
             data_json.items[a].name = name
             data_json.items[a].texture = texture
+            data_json.items[a].texture_hash = texture_hash
+            data_json.items[a].item_kind = item_kind
+            data_json.items[a].val1 = val1
             data_json.items[a].texture_x = texture_x
             data_json.items[a].texture_y = texture_y
             data_json.items[a].spread_type = spread_type
+            data_json.items[a].is_stripey_wallpaper = is_stripey_wallpaper
+            data_json.items[a].collision_type = collision_type
+            data_json.items[a].break_hits = break_hits
+            data_json.items[a].drop_chance = drop_chance
+            data_json.items[a].clothing_type = clothing_type
+            data_json.items[a].rarity = rarity
+            data_json.items[a].max_amount = max_amount
+            data_json.items[a].extra_file = extra_file
+            data_json.items[a].extra_file_hash = extra_file_hash
+            data_json.items[a].audio_volume = audio_volume
+            data_json.items[a].pet_name = pet_name
+            data_json.items[a].pet_prefix = pet_prefix
+            data_json.items[a].pet_suffix = pet_suffix
+            data_json.items[a].pet_ability = pet_ability
             data_json.items[a].seed_base = seed_base
             data_json.items[a].seed_overlay = seed_overlay
             data_json.items[a].tree_base = tree_base
@@ -673,6 +815,24 @@ function item_decoder(file, using_editor) {
                 data_json.items[a].seed_overlay_color.g = seed_overlay_color_g
                 data_json.items[a].seed_overlay_color.b = seed_overlay_color_b
             }
+
+            data_json.items[a].grow_time = grow_time
+            data_json.items[a].val2 = val2
+            data_json.items[a].is_rayman = is_rayman
+            data_json.items[a].extra_options = extra_options
+            data_json.items[a].texture2 = texture2
+            data_json.items[a].extra_options2 = extra_options2
+            data_json.items[a].data_position_80 = data_position_80
+            data_json.items[a].punch_options = punch_options
+            data_json.items[a].data_version_12 = data_version_12
+            data_json.items[a].int_version_13 = int_version_13
+            data_json.items[a].int_version_14 = int_version_14
+            data_json.items[a].data_version_15 = data_version_15
+            data_json.items[a].str_version_15 = str_version_15
+            data_json.items[a].str_version_16 = str_version_16
+            data_json.items[a].int_version_17 = int_version_17
+            data_json.items[a].int_version_18 = int_version_18
+            data_json.items[a].int_version_19 = int_version_19
         }
         if (using_editor) {
             if (!$.fn.dataTable.isDataTable("#itemsList")) {
