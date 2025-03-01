@@ -595,11 +595,6 @@ function item_decoder(file, using_editor) {
             var item_id = read_buffer_number(arrayBuffer, mem_pos, 4);
             mem_pos += 4;
 
-            var editable_type = arrayBuffer[mem_pos++];
-            var item_category = arrayBuffer[mem_pos++];
-            var action_type = arrayBuffer[mem_pos++];
-            var hit_sound_type = arrayBuffer[mem_pos++];
-
             var len = read_buffer_number(arrayBuffer, mem_pos, 2)
             mem_pos += 2;
             var name = read_buffer_string(arrayBuffer, mem_pos, len, true, Number(item_id));
@@ -610,64 +605,9 @@ function item_decoder(file, using_editor) {
             var texture = read_buffer_string(arrayBuffer, mem_pos, len);
             mem_pos += len;
 
-            var texture_hash = read_buffer_number(arrayBuffer, mem_pos, 4);
-            mem_pos += 4;
-
-            var item_kind = arrayBuffer[mem_pos++];
-
-            var val1 = read_buffer_number(arrayBuffer, mem_pos, 4);
-            mem_pos += 4;
-
             var texture_x = arrayBuffer[mem_pos++];
             var texture_y = arrayBuffer[mem_pos++];
             var spread_type = arrayBuffer[mem_pos++];
-            var is_stripey_wallpaper = arrayBuffer[mem_pos++];
-            var collision_type = arrayBuffer[mem_pos++];
-            var break_hits = arrayBuffer[mem_pos++];
-
-            if ((break_hits % 6) !== 0) break_hits = break_hits + "r"
-            else break_hits = break_hits / 6
-
-            var drop_chance = read_buffer_number(arrayBuffer, mem_pos, 4);
-            mem_pos += 4;
-
-            var clothing_type = arrayBuffer[mem_pos++];
-
-            var rarity = read_buffer_number(arrayBuffer, mem_pos, 2);
-            mem_pos += 2;
-
-            var max_amount = arrayBuffer[mem_pos++];
-
-            len = read_buffer_number(arrayBuffer, mem_pos, 2)
-            mem_pos += 2;
-            var extra_file = read_buffer_string(arrayBuffer, mem_pos, len);
-            mem_pos += len;
-
-            var extra_file_hash = read_buffer_number(arrayBuffer, mem_pos, 4);
-            mem_pos += 4;
-
-            var audio_volume = read_buffer_number(arrayBuffer, mem_pos, 4);
-            mem_pos += 4;
-
-            len = read_buffer_number(arrayBuffer, mem_pos, 2)
-            mem_pos += 2;
-            var pet_name = read_buffer_string(arrayBuffer, mem_pos, len);
-            mem_pos += len;
-
-            len = read_buffer_number(arrayBuffer, mem_pos, 2)
-            mem_pos += 2;
-            var pet_prefix = read_buffer_string(arrayBuffer, mem_pos, len);
-            mem_pos += len;
-
-            len = read_buffer_number(arrayBuffer, mem_pos, 2)
-            mem_pos += 2;
-            var pet_suffix = read_buffer_string(arrayBuffer, mem_pos, len);
-            mem_pos += len;
-
-            len = read_buffer_number(arrayBuffer, mem_pos, 2);
-            mem_pos += 2;
-            var pet_ability = read_buffer_string(arrayBuffer, mem_pos, len);
-            mem_pos += len;
 
             var seed_base = arrayBuffer[mem_pos++];
             var seed_overlay = arrayBuffer[mem_pos++];
