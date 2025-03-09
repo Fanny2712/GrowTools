@@ -157,11 +157,6 @@ document.getElementById('decode_items_dat_editor').addEventListener('click', fun
     input.click();
 });
 
-function argbToInt(a, r, g, b) {
-    return (a << 24) | (r << 16) | (g << 8) | b;
-}
-
-
 document.getElementById('encode_items_dat').addEventListener('click', function () {
     var input = document.createElement('input');
     input.type = 'file';
@@ -180,359 +175,372 @@ function check_last_char(dest, src) {
     return dest[dest.length - 1] == src
 }
 
-function process_item_encoder(result, using_txt) {
-    var mem_pos = 6;
+function item_decoder(file, using_editor) {
+    data_json = {}
+    let mem_pos = 6;
+    var reader = new FileReader()
+    reader.readAsArrayBuffer(file);
 
-    if (using_txt) {
-        var version = 0;
-        result = result.split("\n");
+    reader.onload = function (e) {
+        var arrayBuffer = new Uint8Array(e.target.result);
+        var version = read_buffer_number(arrayBuffer, 0, 2);
+        var item_count = read_buffer_number(arrayBuffer, 2, 4);
 
-        for (let a = 0; a < result.length; a++) {
-            var result1 = result[a].split("\\")
-            if (result1[0] == "version") {
-                version = Number(result1[1])
-                write_buffer_number(0, 2, Number(result1[1]))
-            }
-            else if (result1[0] == "itemCount") write_buffer_number(2, 4, Number(result1[1]))
-            else if (result1[0] == "add_item") {
-                // item id
-                write_buffer_number(mem_pos, 4, result1[1]);
-                mem_pos += 4;
-
-                encoded_buffer_file[mem_pos++] = Number(result1[2]); // editable type
-                encoded_buffer_file[mem_pos++] = Number(result1[3]); // item category
-                encoded_buffer_file[mem_pos++] = Number(result1[4]); // action type
-                encoded_buffer_file[mem_pos++] = Number(result1[5]); // hit sound type
-
-                // name
-                write_buffer_number(mem_pos, 2, result1[6].length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result1[6].length, result1[6], 1, Number(result1[1]))
-                mem_pos += result1[6].length
-
-                // texture
-                write_buffer_number(mem_pos, 2, result1[7].length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result1[7].length, result1[7])
-                mem_pos += result1[7].length
-
-                // texture hash
-                write_buffer_number(mem_pos, 4, result1[8])
-                mem_pos += 4;
-
-                encoded_buffer_file[mem_pos++] = Number(result1[9]) // item kind
-
-                // val1
-                write_buffer_number(mem_pos, 4, result1[10])
-                mem_pos += 4;
-
-                encoded_buffer_file[mem_pos++] = Number(result1[11]) // texture x
-                encoded_buffer_file[mem_pos++] = Number(result1[12]) // texture y
-                encoded_buffer_file[mem_pos++] = Number(result1[13]) // spread type
-                encoded_buffer_file[mem_pos++] = Number(result1[14]) // is stripey wallpaper
-                encoded_buffer_file[mem_pos++] = Number(result1[15]) // collision type
-
-                // break hits
-                if (result1[16].includes("r")) encoded_buffer_file[mem_pos++] = Number(result1[16].slice(0, -1))
-                else encoded_buffer_file[mem_pos++] = Number(result1[16]) * 6
-
-                // drop chance
-                write_buffer_number(mem_pos, 4, result1[17])
-                mem_pos += 4;
-
-                encoded_buffer_file[mem_pos++] = Number(result1[18]) // clothing type
-
-                // rarity
-                write_buffer_number(mem_pos, 2, result1[19])
-                mem_pos += 2;
-
-                encoded_buffer_file[mem_pos++] = Number(result1[20]) // max amount
-
-                // extra file
-                write_buffer_number(mem_pos, 2, result1[21].length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result1[21].length, result1[21])
-                mem_pos += result1[21].length
-
-                // extra file hash
-                write_buffer_number(mem_pos, 4, result1[22])
-                mem_pos += 4;
-
-                // audio volume
-                write_buffer_number(mem_pos, 4, result1[23])
-                mem_pos += 4;
-
-                // pet name
-                write_buffer_number(mem_pos, 2, result1[24].length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result1[24].length, result1[24])
-                mem_pos += result1[24].length
-
-                // pet prefix
-                write_buffer_number(mem_pos, 2, result1[25].length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result1[25].length, result1[25])
-                mem_pos += result1[25].length
-
-                // pet suffix
-                write_buffer_number(mem_pos, 2, result1[26].length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result1[26].length, result1[26])
-                mem_pos += result1[26].length
-
-                // pet ability
-                write_buffer_number(mem_pos, 2, result1[27].length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result1[27].length, result1[27])
-                mem_pos += result1[27].length
-
-                encoded_buffer_file[mem_pos++] = Number(result1[28]) // seed base
-                encoded_buffer_file[mem_pos++] = Number(result1[29]) // seed overlay
-                encoded_buffer_file[mem_pos++] = Number(result1[30]) // tree base
-                encoded_buffer_file[mem_pos++] = Number(result1[31]) // tree leaves
-
-                // seed color (ARGB)
-                var to_object = result1[32].split(",")
-                encoded_buffer_file[mem_pos++] = to_object[0] // seed color (A)
-                encoded_buffer_file[mem_pos++] = to_object[1] // seed color (R)
-                encoded_buffer_file[mem_pos++] = to_object[2] // seed color (G)
-                encoded_buffer_file[mem_pos++] = to_object[3] // seed color (B)
-
-                // seed overlay color (ARGB)
-                to_object = result1[33].split(",")
-                encoded_buffer_file[mem_pos++] = to_object[0] // seed color overlay (A)
-                encoded_buffer_file[mem_pos++] = to_object[1] // seed color overlay (A)
-                encoded_buffer_file[mem_pos++] = to_object[2] // seed color overlay (A)
-                encoded_buffer_file[mem_pos++] = to_object[3] // seed color overlay (A)
-
-                // ingredients (Skip)
-                write_buffer_number(mem_pos, 4, 0);
-                mem_pos += 4;
-
-                // grow time
-                write_buffer_number(mem_pos, 4, result1[34]);
-                mem_pos += 4;
-
-                // val2
-                write_buffer_number(mem_pos, 2, result1[35]);
-                mem_pos += 2;
-
-                // is rayman
-                write_buffer_number(mem_pos, 2, result1[36]);
-                mem_pos += 2;
-
-                // extra options
-                write_buffer_number(mem_pos, 2, result1[37].length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result1[37].length, result1[37])
-                mem_pos += result1[37].length
-
-                // texture2
-                write_buffer_number(mem_pos, 2, result1[38].length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result1[38].length, result1[38])
-                mem_pos += result1[38].length
-
-                // extra options2
-                write_buffer_number(mem_pos, 2, result1[39].length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result1[39].length, result1[39])
-                mem_pos += result1[39].length
-
-                // Data (Position 80)
-                hexStringToArrayBuffer(mem_pos, result1[40])
-                mem_pos += 80;
-
-                if (version >= 11) {
-                    // punch options
-                    write_buffer_number(mem_pos, 2, result1[41].length);
-                    mem_pos += 2;
-                    write_buffer_string(mem_pos, result1[41].length, result1[41])
-                    mem_pos += result1[41].length
-                }
-                if (version >= 12) {
-                    hexStringToArrayBuffer(mem_pos, result1[42])
-                    mem_pos += 13;
-                }
-                if (version >= 13) {
-                    write_buffer_number(mem_pos, 4, result1[43])
-                    mem_pos += 4;
-                }
-                if (version >= 14) {
-                    write_buffer_number(mem_pos, 4, result1[44])
-                    mem_pos += 4;
-                }
-                if (version >= 15) {
-                    hexStringToArrayBuffer(mem_pos, result1[45])
-                    mem_pos += 25;
-                    write_buffer_number(mem_pos, 2, result1[46].length);
-                    mem_pos += 2;
-                    write_buffer_string(mem_pos, result1[46].length, result1[46])
-                    mem_pos += result1[46].length
-                }
-                if (version >= 16) {
-                    write_buffer_number(mem_pos, 2, result1[47].length);
-                    mem_pos += 2;
-                    write_buffer_string(mem_pos, result1[47].length, result1[47])
-                    mem_pos += result1[47].length
-                }
-                if (version >= 17) {
-                    write_buffer_number(mem_pos, 4, result1[48])
-                    mem_pos += 4;
-                }
-                if (version >= 18) {
-                    write_buffer_number(mem_pos, 4, result1[49])
-                    mem_pos += 4;
-                }
-                if (version >= 19) {
-                    write_buffer_number(mem_pos, 9, result1[50])
-                    mem_pos += 9;
-                }
-            }
+        if (version > 19) {
+            return Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            }).fire({
+                icon: 'error',
+                title: "Your items.dat version is " + version + ", and This decoder doesnt support that version!"
+            })
         }
-    } else {
-        write_buffer_number(0, 2, result.version)
-        write_buffer_number(2, 4, result.item_count)
-        for (let a = 0; a < result.item_count; a++) {
-            write_buffer_number(mem_pos, 4, result.items[a].item_id);
-            mem_pos += 4;
-            encoded_buffer_file[mem_pos++] = result.items[a].editable_type
-            encoded_buffer_file[mem_pos++] = result.items[a].item_category
-            encoded_buffer_file[mem_pos++] = result.items[a].action_type
-            encoded_buffer_file[mem_pos++] = result.items[a].hit_sound_type
-            write_buffer_number(mem_pos, 2, result.items[a].name.length);
-            mem_pos += 2;
-            write_buffer_string(mem_pos, result.items[a].name.length, result.items[a].name, 1, result.items[a].item_id)
-            mem_pos += result.items[a].name.length
-            write_buffer_number(mem_pos, 2, result.items[a].texture.length);
-            mem_pos += 2;
-            write_buffer_string(mem_pos, result.items[a].texture.length, result.items[a].texture)
-            mem_pos += result.items[a].texture.length
-            write_buffer_number(mem_pos, 4, result.items[a].texture_hash)
-            mem_pos += 4;
-            encoded_buffer_file[mem_pos++] = result.items[a].item_kind
-            write_buffer_number(mem_pos, 4, result.items[a].val1)
-            mem_pos += 4;
-            encoded_buffer_file[mem_pos++] = result.items[a].texture_x
-            encoded_buffer_file[mem_pos++] = result.items[a].texture_y
-            encoded_buffer_file[mem_pos++] = result.items[a].spread_type
-            encoded_buffer_file[mem_pos++] = result.items[a].is_stripey_wallpaper
-            encoded_buffer_file[mem_pos++] = result.items[a].collision_type
+        data_json.version = version
+        data_json.item_count = item_count
+        data_json.items = []
 
-            if (check_last_char(result.items[a].break_hits.toString(), "r")) encoded_buffer_file[mem_pos++] = Number(result.items[a].break_hits.toString().slice(0, -1))
-            else encoded_buffer_file[mem_pos++] = Number(result.items[a].break_hits) * 6
+        // Check if this is a proprietary item database
+        let isProprietary = false;
+        let proprietaryVersion = 0;
+        let customItemsCount = 0;
+        let originalItemsCount = 0;
 
-            write_buffer_number(mem_pos, 4, result.items[a].drop_chance)
+        // If needed, you could add proprietary detection logic here
+        // Similar to IsProprietaryItemDB() in the C++ code
+
+        for (let a = 0; a < item_count; a++) {
+            var item_id = read_buffer_number(arrayBuffer, mem_pos, 4);
             mem_pos += 4;
-            encoded_buffer_file[mem_pos++] = result.items[a].clothing_type
-            write_buffer_number(mem_pos, 2, result.items[a].rarity)
+
+            var editable_type = arrayBuffer[mem_pos++];
+            var item_category = arrayBuffer[mem_pos++];
+            var action_type = arrayBuffer[mem_pos++];
+            var hit_sound_type = arrayBuffer[mem_pos++];
+
+            var len = read_buffer_number(arrayBuffer, mem_pos, 2)
+            mem_pos += 2;
+            var name = read_buffer_string(arrayBuffer, mem_pos, len, true, Number(item_id));
+            mem_pos += len;
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
+            mem_pos += 2;
+            var texture = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            // Remove the .rttex extension
+            texture = texture.replace('.rttex', '');
+
+            var texture_hash = read_buffer_number(arrayBuffer, mem_pos, 4);
+            mem_pos += 4;
+
+            var item_kind = arrayBuffer[mem_pos++];
+
+            var val1 = read_buffer_number(arrayBuffer, mem_pos, 4);
+            mem_pos += 4;
+
+            var texture_x = arrayBuffer[mem_pos++];
+            var texture_y = arrayBuffer[mem_pos++];
+            var spread_type = arrayBuffer[mem_pos++];
+            var is_stripey_wallpaper = arrayBuffer[mem_pos++];
+            var collision_type = arrayBuffer[mem_pos++];
+            var break_hits = arrayBuffer[mem_pos++];
+
+            if ((break_hits % 6) !== 0) break_hits = break_hits + "r"
+            else break_hits = break_hits / 6
+
+            var drop_chance = read_buffer_number(arrayBuffer, mem_pos, 4);
+            mem_pos += 4;
+
+            var clothing_type = arrayBuffer[mem_pos++];
+
+            var rarity = read_buffer_number(arrayBuffer, mem_pos, 2);
             mem_pos += 2;
 
-            encoded_buffer_file[mem_pos++] = result.items[a].max_amount
-            write_buffer_number(mem_pos, 2, result.items[a].extra_file.length);
+            var max_amount = arrayBuffer[mem_pos++];
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
             mem_pos += 2;
-            write_buffer_string(mem_pos, result.items[a].extra_file.length, result.items[a].extra_file)
-            mem_pos += result.items[a].extra_file.length
-            write_buffer_number(mem_pos, 4, result.items[a].extra_file_hash)
+            var extra_file = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            var extra_file_hash = read_buffer_number(arrayBuffer, mem_pos, 4);
             mem_pos += 4;
-            write_buffer_number(mem_pos, 4, result.items[a].audio_volume)
+
+            var audio_volume = read_buffer_number(arrayBuffer, mem_pos, 4);
             mem_pos += 4;
-            write_buffer_number(mem_pos, 2, result.items[a].pet_name.length);
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
             mem_pos += 2;
-            write_buffer_string(mem_pos, result.items[a].pet_name.length, result.items[a].pet_name)
-            mem_pos += result.items[a].pet_name.length
-            write_buffer_number(mem_pos, 2, result.items[a].pet_prefix.length);
+            var pet_name = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
             mem_pos += 2;
-            write_buffer_string(mem_pos, result.items[a].pet_prefix.length, result.items[a].pet_prefix)
-            mem_pos += result.items[a].pet_prefix.length
-            write_buffer_number(mem_pos, 2, result.items[a].pet_suffix.length);
+            var pet_prefix = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
             mem_pos += 2;
-            write_buffer_string(mem_pos, result.items[a].pet_suffix.length, result.items[a].pet_suffix)
-            mem_pos += result.items[a].pet_suffix.length
-            write_buffer_number(mem_pos, 2, result.items[a].pet_ability.length);
+            var pet_suffix = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2);
             mem_pos += 2;
-            write_buffer_string(mem_pos, result.items[a].pet_ability.length, result.items[a].pet_ability)
-            mem_pos += result.items[a].pet_ability.length
-            encoded_buffer_file[mem_pos++] = result.items[a].seed_base
-            encoded_buffer_file[mem_pos++] = result.items[a].seed_overlay
-            encoded_buffer_file[mem_pos++] = result.items[a].tree_base
-            encoded_buffer_file[mem_pos++] = result.items[a].tree_leaves
-            encoded_buffer_file[mem_pos++] = result.items[a].seed_color.a
-            encoded_buffer_file[mem_pos++] = result.items[a].seed_color.r
-            encoded_buffer_file[mem_pos++] = result.items[a].seed_color.g
-            encoded_buffer_file[mem_pos++] = result.items[a].seed_color.b
-            encoded_buffer_file[mem_pos++] = result.items[a].seed_overlay_color.a
-            encoded_buffer_file[mem_pos++] = result.items[a].seed_overlay_color.r
-            encoded_buffer_file[mem_pos++] = result.items[a].seed_overlay_color.g
-            encoded_buffer_file[mem_pos++] = result.items[a].seed_overlay_color.b
-            write_buffer_number(mem_pos, 4, 0); // skipping ingredients
+            var pet_ability = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            var seed_base = arrayBuffer[mem_pos++];
+            var seed_overlay = arrayBuffer[mem_pos++];
+            var tree_base = arrayBuffer[mem_pos++];
+            var tree_leaves = arrayBuffer[mem_pos++];
+
+            var seed_color_a = arrayBuffer[mem_pos++];
+            var seed_color_r = arrayBuffer[mem_pos++];
+            var seed_color_g = arrayBuffer[mem_pos++];
+            var seed_color_b = arrayBuffer[mem_pos++];
+            var seed_overlay_color_a = arrayBuffer[mem_pos++];
+            var seed_overlay_color_r = arrayBuffer[mem_pos++];
+            var seed_overlay_color_g = arrayBuffer[mem_pos++];
+            var seed_overlay_color_b = arrayBuffer[mem_pos++];
+
+            // Read ingredient instead of skipping
+            var ingredient = read_buffer_number(arrayBuffer, mem_pos, 4);
             mem_pos += 4;
-            write_buffer_number(mem_pos, 4, result.items[a].grow_time);
+
+            var grow_time = read_buffer_number(arrayBuffer, mem_pos, 4);
             mem_pos += 4;
-            write_buffer_number(mem_pos, 2, result.items[a].val2);
+
+            var val2 = read_buffer_number(arrayBuffer, mem_pos, 2);
             mem_pos += 2;
-            write_buffer_number(mem_pos, 2, result.items[a].is_rayman);
+            var is_rayman = read_buffer_number(arrayBuffer, mem_pos, 2);
             mem_pos += 2;
-            write_buffer_number(mem_pos, 2, result.items[a].extra_options.length);
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
             mem_pos += 2;
-            write_buffer_string(mem_pos, result.items[a].extra_options.length, result.items[a].extra_options)
-            mem_pos += result.items[a].extra_options.length
-            write_buffer_number(mem_pos, 2, result.items[a].texture2.length);
+            var extra_options = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
             mem_pos += 2;
-            write_buffer_string(mem_pos, result.items[a].texture2.length, result.items[a].texture2)
-            mem_pos += result.items[a].texture2.length
-            write_buffer_number(mem_pos, 2, result.items[a].extra_options2.length);
+            var texture2 = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            len = read_buffer_number(arrayBuffer, mem_pos, 2)
             mem_pos += 2;
-            write_buffer_string(mem_pos, result.items[a].extra_options2.length, result.items[a].extra_options2)
-            mem_pos += result.items[a].extra_options2.length
-            hexStringToArrayBuffer(mem_pos, result.items[a].data_position_80)
+            var extra_options2 = read_buffer_string(arrayBuffer, mem_pos, len);
+            mem_pos += len;
+
+            var data_position_80 = hex(arrayBuffer.slice(mem_pos, mem_pos + 80), document.getElementById("using_txt_mode").checked).toUpperCase()
+            var reserved_bytes = arrayBuffer.slice(mem_pos, mem_pos + 80);
             mem_pos += 80;
-            if (result.version >= 11) {
-                write_buffer_number(mem_pos, 2, result.items[a].punch_options.length);
+
+            var punch_options = "";
+            if (version >= 11) {
+                len = read_buffer_number(arrayBuffer, mem_pos, 2)
                 mem_pos += 2;
-                write_buffer_string(mem_pos, result.items[a].punch_options.length, result.items[a].punch_options)
-                mem_pos += result.items[a].punch_options.length
+                punch_options = read_buffer_string(arrayBuffer, mem_pos, len);
+                mem_pos += len;
             }
-            if (result.version >= 12) {
-                hexStringToArrayBuffer(mem_pos, result.items[a].data_version_12)
-                mem_pos += 13;
-            }
-            if (result.version >= 13) {
-                write_buffer_number(mem_pos, 4, result.items[a].int_version_13)
+
+            var flags3 = 0;
+            if (version >= 12) {
+                var data_version_12 = hex(arrayBuffer.slice(mem_pos, mem_pos + 13), document.getElementById("using_txt_mode").checked).toUpperCase();
+                
+                // In C++ this is flags3
+                flags3 = read_buffer_number(arrayBuffer, mem_pos, 4);
                 mem_pos += 4;
-            }
-            if (result.version >= 14) {
-                write_buffer_number(mem_pos, 4, result.items[a].int_version_14)
-                mem_pos += 4;
-            }
-            if (result.version >= 15) {
-                hexStringToArrayBuffer(mem_pos, result.items[a].data_version_15)
-                mem_pos += 25;
-                write_buffer_number(mem_pos, 2, result.items[a].str_version_15.length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result.items[a].str_version_15.length, result.items[a].str_version_15)
-                mem_pos += result.items[a].str_version_15.length
-            }
-            if (result.version >= 16) {
-                write_buffer_number(mem_pos, 2, result.items[a].str_version_16.length);
-                mem_pos += 2;
-                write_buffer_string(mem_pos, result.items[a].str_version_16.length, result.items[a].str_version_16)
-                mem_pos += result.items[a].str_version_16.length
-            }
-            if (result.version >= 17) {
-                write_buffer_number(mem_pos, 4, result.items[a].int_version_17)
-                mem_pos += 4;
-            }
-            if (result.version >= 18) {
-                write_buffer_number(mem_pos, 4, result.items[a].int_version_18)
-                mem_pos += 4;
-            }
-            if (result.version >= 19) {
-                write_buffer_number(mem_pos, 9, result.items[a].int_version_19)
+
+                // In C++ this seems to be bodyPart (9 bytes)
+                var body_part = arrayBuffer.slice(mem_pos, mem_pos + 9);
                 mem_pos += 9;
+            } else {
+                flags3 = 0;
+                var body_part = new Uint8Array(9);
+            }
+
+            var flags4 = 0;
+            if (version >= 13) {
+                flags4 = read_buffer_number(arrayBuffer, mem_pos, 4);
+                mem_pos += 4;
+            }
+
+            var flags5 = 0;
+            if (version >= 14) {
+                flags5 = read_buffer_number(arrayBuffer, mem_pos, 4);
+                mem_pos += 4;
+            }
+
+            var reserved2_bytes = null;
+            var some_string = "";
+            if (version >= 15) {
+                reserved2_bytes = arrayBuffer.slice(mem_pos, mem_pos + 25);
+                var data_version_15 = hex(arrayBuffer.slice(mem_pos, mem_pos + 25), document.getElementById("using_txt_mode").checked).toUpperCase();
+                mem_pos += 25;
+
+                len = read_buffer_number(arrayBuffer, mem_pos, 2);
+                mem_pos += 2;
+                some_string = read_buffer_string(arrayBuffer, mem_pos, len);
+                mem_pos += len;
+            }
+
+            var flags6 = 0;
+            if (version >= 16) {
+                flags6 = read_buffer_number(arrayBuffer, mem_pos, 2);
+                mem_pos += 2;
+            }
+
+            // Proprietary fields - can be added if proprietary detection is implemented
+            var description = "";
+            var enable_message = "";
+            var disable_message = "";
+            var playmod_name = "";
+            var gem_drop = 0;
+            var item_chi = 0;
+            var recipe_a = 0;
+            var recipe_b = 0;
+            var punch_id = 0;
+            var playmods = "";
+
+            if (isProprietary) {
+                // Add code to read proprietary fields here if needed
+            }
+
+            if (item_id != a) console.log(`Unordered Items at ${a}`);
+
+            // Track custom items vs original items
+            if (item_id < 0) {
+                customItemsCount++;
+            } else {
+                originalItemsCount++;
+            }
+
+            data_json.items[a] = {}
+            data_json.items[a].m_id = item_id
+            data_json.items[a].m_editable_type = editable_type
+            data_json.items[a].m_item_category = item_category
+            data_json.items[a].m_action_type = action_type
+            data_json.items[a].m_hit_sound_type = hit_sound_type
+            data_json.items[a].m_name = name
+            data_json.items[a].m_texture = texture
+            data_json.items[a].m_texture_hash = texture_hash
+            data_json.items[a].m_visual_effect = item_kind
+            data_json.items[a].m_flags1 = val1
+            data_json.items[a].m_texture_x = texture_x
+            data_json.items[a].m_texture_y = texture_y
+            data_json.items[a].m_spread_type = spread_type
+            data_json.items[a].m_is_stripey_wallpaper = is_stripey_wallpaper
+            data_json.items[a].m_collision_type = collision_type
+            data_json.items[a].m_break_hits = break_hits
+            data_json.items[a].m_reset_time = drop_chance
+            data_json.items[a].m_clothing_type = clothing_type
+            data_json.items[a].m_rarity = rarity
+            data_json.items[a].m_max_amount = max_amount
+            data_json.items[a].m_extra_file = extra_file
+            data_json.items[a].m_extra_file_hash = extra_file_hash
+            data_json.items[a].m_audio_volume = audio_volume
+            data_json.items[a].m_pet_name = pet_name
+            data_json.items[a].m_pet_prefix = pet_prefix
+            data_json.items[a].m_pet_suffix = pet_suffix
+            data_json.items[a].m_pet_ability = pet_ability
+            data_json.items[a].m_seed_base = seed_base
+            data_json.items[a].m_seed_overlay = seed_overlay
+            data_json.items[a].m_tree_base = tree_base
+            data_json.items[a].m_tree_leaves = tree_leaves
+            data_json.items[a].m_seed_color = argbToInt(seed_color_a, seed_color_r, seed_color_g, seed_color_b)
+            data_json.items[a].m_seed_overlay_color = argbToInt(seed_overlay_color_a, seed_overlay_color_r, seed_overlay_color_g, seed_overlay_color_b)
+            data_json.items[a].m_ingredient = ingredient
+            data_json.items[a].m_grow_time = grow_time
+            data_json.items[a].m_flags2 = val2
+            data_json.items[a].m_rayman = is_rayman
+            data_json.items[a].m_extra_options = extra_options
+            data_json.items[a].m_texture2 = texture2
+            data_json.items[a].m_extra_options2 = extra_options2
+            data_json.items[a].m_punch_options = punch_options
+            
+            // Add new fields
+            data_json.items[a].m_flags3 = flags3
+            data_json.items[a].m_body_part = Array.from(body_part || [])
+            data_json.items[a].m_flags4 = flags4
+            data_json.items[a].m_flags5 = flags5
+            data_json.items[a].m_some_string = some_string
+            data_json.items[a].m_flags6 = flags6
+
+            // Add proprietary fields if implemented
+            if (isProprietary) {
+                data_json.items[a].m_description = description
+                data_json.items[a].m_enable_message = enable_message
+                data_json.items[a].m_disable_message = disable_message
+                data_json.items[a].m_playmod_name = playmod_name
+                data_json.items[a].m_gem_drop = gem_drop
+                data_json.items[a].m_item_chi = item_chi
+                data_json.items[a].m_recipe_a = recipe_a
+                data_json.items[a].m_recipe_b = recipe_b
+                data_json.items[a].m_punch_id = punch_id
+                data_json.items[a].m_playmods = playmods
             }
         }
-    }
+
+        // Add metadata about the items
+        data_json.custom_items_count = customItemsCount;
+        data_json.original_items_count = originalItemsCount;
+        data_json.is_proprietary = isProprietary;
+        if (isProprietary) {
+            data_json.proprietary_version = proprietaryVersion;
+        }
+        
+        if (using_editor) {
+            if (!$.fn.dataTable.isDataTable("#itemsList")) {
+                document.getElementById("itemsList").classList.remove("d-none")
+                document.getElementById("save_items_dat_div").classList.remove("d-none")
+                $("#itemsList").DataTable({
+                    scrollY: "500px",
+                    scrollX: true,
+                    scrollCollapse: true,
+                    paging: true,
+                    fixedColumns: {
+                        left: 1,
+                        right: 1
+                    }, "lengthChange": false, "autoWidth": false,
+                    "columnDefs": [
+                        {
+                            "targets": [0],
+                            "render": function (data, type, full, meta) {
+                                return type === 'display' && typeof data === 'string' ?
+                                    data.replace(/</g, '&lt;').replace(/>/g, '&gt;') : data;
+                            }
+                        }
+                    ]
+                }).buttons().container().appendTo('#itemsList_wrapper .col-md-6:eq(0)');
+                $('#itemsList').DataTable().columns.adjust()
+                $(window).resize(function () {
+                    $('#itemsList').DataTable().columns.adjust()
+                });
+            }
+            var result = []
+            for (let a = 0; a < item_count; a++) {
+                result[a] = []
+                result[a][0] = data_json.items[a].m_id
+                result[a][1] = data_json.items[a].m_name
+                result[a][2] = `<center><button class="btn btn-primary" onclick="editItems(${a})">Edit/Info</button></center>`
+            }
+            $("#itemsList").DataTable().rows.add(result).draw()
+            result = []
+        } else {
+            if (document.getElementById("using_txt_mode").checked) {
+                var to_txt_result = `//Credit: IProgramInCPP & GrowtopiaNoobs\n//Format: add_item\\${Object.keys(data_json.items[0]).join("\\")}\n//NOTE: There are several items, for the breakhits part, add 'r'.\n//Example: 184r\n//What does it mean? So, adding 'r' to breakhits makes it raw breakhits, meaning, if you add 'r' to breakhits, when encoding items.dat, the encoder won't multiply it by 6.\n\nversion\\${data_json.version}\nitemCount\\${data_json.item_count}\n\n`;
+                for (let a = 0; a < item_count; a++) to_txt_result += "add_item\\" + Object.values(data_json.items[a]).join("\\") + "\n"
+                saveData(to_txt_result, "items.txt")
+            } else saveData(JSON.stringify(data_json, null, 4), "items.json");
+            data_json = {}
+        }
+    };
+};
+
+// Helper function for ARGB to integer conversion
+function argbToInt(a, r, g, b) {
+    return ((a & 0xFF) << 24) | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
 }
 
 /**
